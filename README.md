@@ -1,6 +1,6 @@
 # Serenity Companion
 
-[![Deploy to Cloudflare][cloudflarebutton]]
+[![Deploy to Cloudflare][![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/a3908169-droid/serenity-companion-healing-ai-counseling)]
 
 A production-ready AI chat companion built on Cloudflare Workers with Durable Objects for stateful multi-session conversations. Features streaming responses, tool calling (web search, weather, MCP tools), model switching (Gemini family), and a responsive React frontend with shadcn/ui.
 
@@ -129,7 +129,7 @@ Bindings auto-configured via `wrangler.jsonc`:
 
 Custom domain via Cloudflare Dashboard. Assets served as SPA.
 
-[![Deploy to Cloudflare][cloudflarebutton]]
+[![Deploy to Cloudflare][![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/a3908169-droid/serenity-companion-healing-ai-counseling)]
 
 ## ⚙️ Configuration
 
