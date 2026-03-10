@@ -14,7 +14,6 @@ export function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  // Initialize session and load messages
   useEffect(() => {
     const loadMessages = async () => {
       const response = await chatService.getMessages();
@@ -24,7 +23,6 @@ export function HomePage() {
     };
     loadMessages();
   }, []);
-  // Auto-scroll to bottom
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
@@ -39,7 +37,6 @@ export function HomePage() {
     const userMessage = input.trim();
     setInput('');
     setIsLoading(true);
-    // Optimistically add user message
     const tempUserMsg: Message = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -72,16 +69,15 @@ export function HomePage() {
     });
   };
   return (
-    <div className="flex flex-col h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex flex-col h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-healing-pulse">
       <div className="py-4 md:py-6 lg:py-8 flex flex-col h-full">
-        {/* Header */}
         <header className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-soft">
               <Heart className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-stone-800 tracking-tight">宁静伙伴 Serenity</h1>
+              <h1 className="text-xl font-semibold text-stone-800 tracking-tight">暖暖回声 Warm Echo</h1>
               <p className="text-xs text-muted-foreground font-medium">您的心灵治愈空间</p>
             </div>
           </div>
@@ -89,13 +85,12 @@ export function HomePage() {
             "在喧嚣的世界中，为您留存一份宁静。"
           </div>
         </header>
-        {/* Chat Area */}
         <main className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 glass-card rounded-3xl overflow-hidden relative flex flex-col">
             <ScrollArea className="flex-1 p-6" viewportRef={scrollRef}>
               <AnimatePresence initial={false}>
                 {messages.length === 0 ? (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="h-full flex flex-col items-center justify-center text-center space-y-4 py-20"
@@ -103,10 +98,10 @@ export function HomePage() {
                     <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center">
                       <Sparkles className="w-8 h-8 text-accent-foreground" />
                     </div>
-                    <div className="space-y-2">
-                      <h2 className="text-xl font-medium text-stone-700">你好，我是你的宁静伙伴</h2>
-                      <p className="text-stone-500 max-w-sm mx-auto">
-                        你可以把这里当成一个安全的港湾。无论是生活中的压力，还是心底的小情绪，都可以跟我聊聊。
+                    <div className="space-y-2 px-6">
+                      <h2 className="text-xl font-medium text-stone-700">你好，我是你的暖暖回声</h2>
+                      <p className="text-stone-500 max-w-sm mx-auto leading-relaxed">
+                        每一个漂泊的情绪都值得被温柔接纳。无论是心底的微光，还是暂时的阴霾，我都会在这里倾听你的回声。
                       </p>
                     </div>
                   </motion.div>
@@ -116,13 +111,13 @@ export function HomePage() {
                       <MessageBubble key={msg.id} role={msg.role} content={msg.content} />
                     ))}
                     {isLoading && (
-                      <motion.div 
-                        initial={{ opacity: 0 }} 
-                        animate={{ opacity: 1 }} 
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         className="flex justify-start"
                       >
-                        <div className="bg-primary/20 p-4 rounded-2xl text-stone-500 text-sm animate-pulse">
-                          宁静伙伴正在聆听并思考...
+                        <div className="bg-primary/20 p-4 rounded-2xl text-stone-600 text-sm animate-pulse">
+                          暖暖回声正在倾听，正在为您编织温暖的回应...
                         </div>
                       </motion.div>
                     )}
@@ -130,18 +125,17 @@ export function HomePage() {
                 )}
               </AnimatePresence>
             </ScrollArea>
-            {/* Action Buttons */}
-            <div className="px-6 py-4 flex gap-3 border-t border-white/20 bg-white/30">
-              <Button 
-                variant="outline" 
+            <div className="px-6 py-4 flex gap-3 border-t border-stone-100 bg-white/30">
+              <Button
+                variant="outline"
                 onClick={focusInput}
                 className="flex-1 rounded-2xl bg-white/50 border-stone-200 text-stone-700 hover:bg-white transition-all py-6"
               >
                 <Heart className="w-4 h-4 mr-2 text-rose-400" />
                 立即倾诉
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={bookExpert}
                 className="flex-1 rounded-2xl bg-white/50 border-stone-200 text-stone-700 hover:bg-white transition-all py-6"
               >
@@ -149,20 +143,19 @@ export function HomePage() {
                 预约专家
               </Button>
             </div>
-            {/* Input Bar */}
-            <form onSubmit={handleSendMessage} className="p-4 bg-white/40 border-t border-white/20">
+            <form onSubmit={handleSendMessage} className="p-4 bg-white/40 border-t border-stone-100">
               <div className="relative flex items-center">
                 <Input
                   ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="在这里输入你想说的话..."
+                  placeholder="告诉我你此刻的感受..."
                   className="pr-12 py-7 rounded-2xl bg-white/80 border-stone-100 shadow-soft focus-visible:ring-primary focus-visible:ring-offset-0"
                   disabled={isLoading}
                 />
-                <Button 
-                  type="submit" 
-                  size="icon" 
+                <Button
+                  type="submit"
+                  size="icon"
                   disabled={!input.trim() || isLoading}
                   className="absolute right-2 h-10 w-10 rounded-xl bg-primary hover:bg-primary/80 text-white transition-all"
                 >
@@ -172,7 +165,6 @@ export function HomePage() {
             </form>
           </div>
         </main>
-        {/* Footer */}
         <footer className="mt-8 text-center space-y-2">
           <p className="text-[10px] sm:text-xs text-muted-foreground px-4 py-2 bg-stone-100/50 inline-block rounded-full border border-stone-200">
             温馨提示：我是AI助手，不替代专业心理咨询。遇到紧急情况请立即拨打援助热线。

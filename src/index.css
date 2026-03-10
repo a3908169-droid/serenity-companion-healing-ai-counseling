@@ -3,7 +3,7 @@
 @tailwind utilities;
 @layer base {
   :root {
-    /* Morandi Palette */
+    /* Morandi Palette Refined */
     /* Background: #F7F5F0 (Warm Off-white) */
     --background: 45 20% 96%;
     /* Foreground: #44403C (Soft Stone) */
@@ -23,25 +23,31 @@
     --border: 30 10% 90%;
     --input: 30 10% 90%;
     --ring: 204 23% 74%;
-    --radius: 1rem;
+    --radius: 1.25rem;
   }
   * {
     @apply border-border;
   }
   html, body {
     height: 100%;
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-stone-800 antialiased;
     font-family: 'Inter', system-ui, sans-serif;
   }
   #root {
     height: 100%;
   }
 }
+@layer utilities {
+  @keyframes healing-pulse {
+    0%, 100% { background-color: hsl(45, 20%, 96%); }
+    50% { background-color: hsl(45, 20%, 97.5%); }
+  }
+  .animate-healing-pulse {
+    animation: healing-pulse 8s ease-in-out infinite;
+  }
+}
 @layer components {
   .glass-card {
-    @apply bg-white/60 backdrop-blur-md border border-white/40 shadow-soft;
-  }
-  .chat-container {
-    height: calc(100vh - 18rem);
+    @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)];
   }
 }
