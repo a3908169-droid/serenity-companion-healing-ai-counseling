@@ -20,27 +20,28 @@ export function MessageBubble({ role, content }: MessageBubbleProps) {
       <div
         className={cn(
           "max-w-[85%] sm:max-w-[75%] p-4 shadow-sm relative",
-          isUser
-            ? "bg-accent/40 text-stone-800 rounded-2xl rounded-tr-none ml-12"
+          isUser 
+            ? "bg-accent/40 text-stone-800 rounded-2xl rounded-tr-none ml-12" 
             : "bg-primary/20 text-stone-800 rounded-2xl rounded-tl-none mr-12"
         )}
       >
         <p className="text-sm leading-relaxed whitespace-pre-wrap">
           {content}
         </p>
-        <div
+        {/* Subtle decorative tail */}
+        <div 
           className={cn(
             "absolute top-0 w-3 h-3",
-            isUser
-              ? "-right-1 bg-accent/40 [clip-path:polygon(0%_0%,100%_0%,0%_100%)]"
+            isUser 
+              ? "-right-1 bg-accent/40 [clip-path:polygon(0%_0%,100%_0%,0%_100%)]" 
               : "-left-1 bg-primary/20 [clip-path:polygon(0%_0%,100%_0%,100%_100%)]"
           )}
         />
         <div className={cn(
-          "mt-2 text-[10px] opacity-40 uppercase tracking-tighter font-medium",
+          "mt-2 text-[10px] opacity-40 uppercase tracking-tighter",
           isUser ? "text-right" : "text-left"
         )}>
-          {isUser ? "我" : "暖暖回声"}
+          {isUser ? "我" : "宁静伙伴"}
         </div>
       </div>
     </motion.div>

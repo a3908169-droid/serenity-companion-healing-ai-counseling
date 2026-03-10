@@ -1,138 +1,188 @@
-// Home page of the app.
-// Currently a demo placeholder "please wait" screen.
-// Replace this file with your actual app UI. Do not delete it to use some other file as homepage. Simply replace the entire contents of this file.
-
-import { useEffect, useMemo, useState } from 'react'
-import { Sparkles } from 'lucide-react'
-
-import { ThemeToggle } from '@/components/ThemeToggle'
-import { HAS_TEMPLATE_DEMO, TemplateDemo } from '@/components/TemplateDemo'
-import { Button } from '@/components/ui/button'
-import { Toaster, toast } from '@/components/ui/sonner'
-
-function formatDuration(ms: number): string {
-  const total = Math.max(0, Math.floor(ms / 1000))
-  const m = Math.floor(total / 60)
-  const s = total % 60
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
-
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, Heart, Calendar, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { toast, Toaster } from 'sonner';
+import { chatService } from '@/lib/chat';
+import { MessageBubble } from '@/components/chat/MessageBubble';
+import type { Message } from '../../worker/types';
 export function HomePage() {
-  const [coins, setCoins] = useState(0)
-  const [isRunning, setIsRunning] = useState(false)
-  const [startedAt, setStartedAt] = useState<number | null>(null)
-  const [elapsedMs, setElapsedMs] = useState(0)
-
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  // Initialize session and load messages
   useEffect(() => {
-    if (!isRunning || startedAt === null) return
-
-    const t = setInterval(() => {
-      setElapsedMs(Date.now() - startedAt)
-    }, 250)
-
-    return () => clearInterval(t)
-  }, [isRunning, startedAt])
-
-  const formatted = useMemo(() => formatDuration(elapsedMs), [elapsedMs])
-
-  const onPleaseWait = () => {
-    setCoins((c) => c + 1)
-
-    if (!isRunning) {
-      // Resume from the current elapsed time
-      setStartedAt(Date.now() - elapsedMs)
-      setIsRunning(true)
-      toast.success('Building your app…', {
-        description: "Hang tight — we're setting everything up.",
-      })
-      return
+    const loadMessages = async () => {
+      const response = await chatService.getMessages();
+      if (response.success && response.data) {
+        setMessages(response.data.messages);
+      }
+    };
+    loadMessages();
+  }, []);
+  // Auto-scroll to bottom
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
     }
-
-    setIsRunning(false)
-    toast.info('Still working…', {
-      description: 'You can come back in a moment.',
-    })
-  }
-
-  const onReset = () => {
-    setCoins(0)
-    setIsRunning(false)
-    setStartedAt(null)
-    setElapsedMs(0)
-    toast('Reset complete')
-  }
-
-  const onAddCoin = () => {
-    setCoins((c) => c + 1)
-    toast('Coin added')
-  }
-
+  }, [messages]);
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!input.trim() || isLoading) return;
+    const userMessage = input.trim();
+    setInput('');
+    setIsLoading(true);
+    // Optimistically add user message
+    const tempUserMsg: Message = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: userMessage,
+      timestamp: Date.now()
+    };
+    setMessages(prev => [...prev, tempUserMsg]);
+    try {
+      const response = await chatService.sendMessage(userMessage);
+      if (response.success) {
+        const refreshResponse = await chatService.getMessages();
+        if (refreshResponse.success && refreshResponse.data) {
+          setMessages(refreshResponse.data.messages);
+        }
+      } else {
+        toast.error("倾诉未能送达，请稍后再试。");
+      }
+    } catch (error) {
+      toast.error("连接中断了，请检查您的网络。");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const focusInput = () => {
+    inputRef.current?.focus();
+  };
+  const bookExpert = () => {
+    toast.info("正在为您连接专业咨询专家...", {
+      description: "我们的团队会在 24 小时内与您联系。",
+    });
+  };
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-4 overflow-hidden relative">
-      <ThemeToggle />
-      <div className="absolute inset-0 bg-gradient-rainbow opacity-10 dark:opacity-20 pointer-events-none" />
-
-      <div className="text-center space-y-8 relative z-10 animate-fade-in w-full">
-        <div className="flex justify-center">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-primary floating">
-            <Sparkles className="w-8 h-8 text-white rotating" />
+    <div className="flex flex-col h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="py-4 md:py-6 lg:py-8 flex flex-col h-full">
+        {/* Header */}
+        <header className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-soft">
+              <Heart className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold text-stone-800 tracking-tight">宁静伙伴 Serenity</h1>
+              <p className="text-xs text-muted-foreground font-medium">您的心灵治愈空间</p>
+            </div>
           </div>
-        </div>
-
-        <div className="space-y-3">
-          <h1 className="text-5xl md:text-7xl font-display font-bold text-balance leading-tight">
-            Creating your <span className="text-gradient">app</span>
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto text-pretty">
-            Your application would be ready soon.
-          </p>
-        </div>
-
-        {HAS_TEMPLATE_DEMO ? (
-          <div className="max-w-5xl mx-auto text-left">
-            <TemplateDemo />
+          <div className="hidden sm:block text-sm text-stone-500 italic">
+            "在喧嚣的世界中，为您留存一份宁静。"
           </div>
-        ) : (
-          <>
-            <div className="flex justify-center gap-4">
-              <Button
-                size="lg"
-                onClick={onPleaseWait}
-                className="btn-gradient px-8 py-4 text-lg font-semibold hover:-translate-y-0.5 transition-all duration-200"
-                aria-live="polite"
+        </header>
+        {/* Chat Area */}
+        <main className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 glass-card rounded-3xl overflow-hidden relative flex flex-col">
+            <ScrollArea className="flex-1 p-6" viewportRef={scrollRef}>
+              <AnimatePresence initial={false}>
+                {messages.length === 0 ? (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="h-full flex flex-col items-center justify-center text-center space-y-4 py-20"
+                  >
+                    <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center">
+                      <Sparkles className="w-8 h-8 text-accent-foreground" />
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-xl font-medium text-stone-700">你好，我是你的宁静伙伴</h2>
+                      <p className="text-stone-500 max-w-sm mx-auto">
+                        你可以把这里当成一个安全的港湾。无论是生活中的压力，还是心底的小情绪，都可以跟我聊聊。
+                      </p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <div className="space-y-6">
+                    {messages.map((msg) => (
+                      <MessageBubble key={msg.id} role={msg.role} content={msg.content} />
+                    ))}
+                    {isLoading && (
+                      <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        className="flex justify-start"
+                      >
+                        <div className="bg-primary/20 p-4 rounded-2xl text-stone-500 text-sm animate-pulse">
+                          宁静伙伴正在聆听并思考...
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+              </AnimatePresence>
+            </ScrollArea>
+            {/* Action Buttons */}
+            <div className="px-6 py-4 flex gap-3 border-t border-white/20 bg-white/30">
+              <Button 
+                variant="outline" 
+                onClick={focusInput}
+                className="flex-1 rounded-2xl bg-white/50 border-stone-200 text-stone-700 hover:bg-white transition-all py-6"
               >
-                Please Wait
+                <Heart className="w-4 h-4 mr-2 text-rose-400" />
+                立即倾诉
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={bookExpert}
+                className="flex-1 rounded-2xl bg-white/50 border-stone-200 text-stone-700 hover:bg-white transition-all py-6"
+              >
+                <Calendar className="w-4 h-4 mr-2 text-primary" />
+                预约专家
               </Button>
             </div>
-
-            <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-              <div>
-                Time elapsed:{' '}
-                <span className="font-medium tabular-nums text-foreground">{formatted}</span>
+            {/* Input Bar */}
+            <form onSubmit={handleSendMessage} className="p-4 bg-white/40 border-t border-white/20">
+              <div className="relative flex items-center">
+                <Input
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="在这里输入你想说的话..."
+                  className="pr-12 py-7 rounded-2xl bg-white/80 border-stone-100 shadow-soft focus-visible:ring-primary focus-visible:ring-offset-0"
+                  disabled={isLoading}
+                />
+                <Button 
+                  type="submit" 
+                  size="icon" 
+                  disabled={!input.trim() || isLoading}
+                  className="absolute right-2 h-10 w-10 rounded-xl bg-primary hover:bg-primary/80 text-white transition-all"
+                >
+                  <Send className="w-5 h-5" />
+                </Button>
               </div>
-              <div>
-                Coins:{' '}
-                <span className="font-medium tabular-nums text-foreground">{coins}</span>
-              </div>
-            </div>
-
-            <div className="flex justify-center gap-2">
-              <Button variant="outline" size="sm" onClick={onReset}>
-                Reset
-              </Button>
-              <Button variant="outline" size="sm" onClick={onAddCoin}>
-                Add Coin
-              </Button>
-            </div>
-          </>
-        )}
+            </form>
+          </div>
+        </main>
+        {/* Footer */}
+        <footer className="mt-8 text-center space-y-2">
+          <p className="text-[10px] sm:text-xs text-muted-foreground px-4 py-2 bg-stone-100/50 inline-block rounded-full border border-stone-200">
+            温馨提示：我是AI助手，不替代专业心理咨询。遇到紧急情况请立即拨打援助热线。
+          </p>
+          <div className="text-[10px] text-stone-400">
+            本项目具有 AI 能力，在给定时间内对 AI 服务器的请求次数存在限制。
+          </div>
+        </footer>
       </div>
-
-      <footer className="absolute bottom-8 text-center text-muted-foreground/80">
-        <p>Powered by Cloudflare</p>
-      </footer>
-
-      <Toaster richColors closeButton />
+      <Toaster position="top-center" richColors />
     </div>
-  )
+  );
 }
