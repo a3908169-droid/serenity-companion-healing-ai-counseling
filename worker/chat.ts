@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import type { Message, ToolCall } from './types';
 import { getToolDefinitions, executeTool } from './tools';
 import { ChatCompletionMessageFunctionToolCall } from 'openai/resources/index.mjs';
+import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 export class ChatHandler {
   private client: OpenAI;
   private model: string;
@@ -138,27 +139,36 @@ export class ChatHandler {
     openAiToolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[],
     toolResults: ToolCall[]
   ): Promise<string> {
+    const messages: ChatCompletionMessageParam[] = [
+      { role: 'system', content: this.systemPrompt },
+      ...history.slice(-3).map(m => {
+        if (m.role === 'assistant') {
+          return { role: 'assistant' as const, content: m.content, tool_calls: m.toolCalls as any };
+        }
+        return { role: m.role as 'user' | 'system', content: m.content };
+      }),
+      { role: 'user', content: userMessage },
+      { role: 'assistant', content: null, tool_calls: openAiToolCalls },
+      ...toolResults.map((result, index) => ({
+        role: 'tool' as const,
+        content: JSON.stringify(result.result),
+        tool_call_id: openAiToolCalls[index]?.id || result.id
+      }))
+    ];
     const followUpCompletion = await this.client.chat.completions.create({
       model: this.model,
-      messages: [
-        { role: 'system', content: this.systemPrompt },
-        ...history.slice(-3).map(m => ({ role: m.role, content: m.content })),
-        { role: 'user', content: userMessage },
-        { role: 'assistant', content: null, tool_calls: openAiToolCalls },
-        ...toolResults.map((result, index) => ({
-          role: 'tool' as const,
-          content: JSON.stringify(result.result),
-          tool_call_id: openAiToolCalls[index]?.id || result.id
-        }))
-      ],
+      messages,
       max_tokens: 16000
     });
     return followUpCompletion.choices[0]?.message?.content || '我已为您处理了相关信息。';
   }
-  private buildConversationMessages(userMessage: string, history: Message[]) {
+  private buildConversationMessages(userMessage: string, history: Message[]): ChatCompletionMessageParam[] {
     return [
       { role: 'system', content: this.systemPrompt },
-      ...history.slice(-10).map(m => ({ role: m.role, content: m.content })),
+      ...history.slice(-10).map(m => ({ 
+        role: m.role as 'user' | 'assistant' | 'system', 
+        content: m.content 
+      })),
       { role: 'user', content: userMessage }
     ];
   }
