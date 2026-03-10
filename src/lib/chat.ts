@@ -15,6 +15,7 @@ export const MODELS = [
 class ChatService {
   private sessionId: string;
   private baseUrl: string;
+  private _sessionCreated = false;
 
   constructor() {
     this.sessionId = crypto.randomUUID();
@@ -22,11 +23,12 @@ class ChatService {
   }
 
   async sendMessage(
-    message: string, 
-    model?: string, 
+    message: string,
+    model?: string,
     onChunk?: (chunk: string) => void
   ): Promise<ChatResponse> {
     try {
+      await this.ensureSessionCreated();
       const response = await fetch(`${this.baseUrl}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -71,6 +73,7 @@ class ChatService {
 
   async getMessages(): Promise<ChatResponse> {
     try {
+      await this.ensureSessionCreated();
       const response = await fetch(`${this.baseUrl}/messages`);
       
       if (!response.ok) {
@@ -86,6 +89,7 @@ class ChatService {
 
   async clearMessages(): Promise<ChatResponse> {
     try {
+      await this.ensureSessionCreated();
       const response = await fetch(`${this.baseUrl}/clear`, {
         method: 'DELETE'
       });
@@ -108,11 +112,23 @@ class ChatService {
   newSession(): void {
     this.sessionId = crypto.randomUUID();
     this.baseUrl = `/api/chat/${this.sessionId}`;
+    this._sessionCreated = false;
   }
 
   switchSession(sessionId: string): void {
     this.sessionId = sessionId;
     this.baseUrl = `/api/chat/${sessionId}`;
+    this._sessionCreated = false;
+  }
+
+  private async ensureSessionCreated(): Promise<void> {
+    if (!this._sessionCreated) {
+      const res = await this.createSession(undefined, this.sessionId);
+      if (!res.success) {
+        throw new Error(res.error || 'Failed to create session');
+      }
+      this._sessionCreated = true;
+    }
   }
 
   // Session Management Methods
@@ -171,6 +187,7 @@ class ChatService {
 
   async updateModel(model: string): Promise<ChatResponse> {
     try {
+      await this.ensureSessionCreated();
       const response = await fetch(`${this.baseUrl}/model`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

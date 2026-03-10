@@ -181,19 +181,22 @@ export class ChatHandler {
    * Generate final response after tool execution
    */
   private async generateToolResponse(
-    userMessage: string, 
-    history: Message[], 
-    openAiToolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[], 
+    userMessage: string,
+    history: Message[],
+    openAiToolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[],
     toolResults: ToolCall[]
   ): Promise<string> {
     const followUpCompletion = await this.client.chat.completions.create({
       model: this.model,
       messages: [
-        { role: 'system', content: 'You are a helpful AI assistant. Respond naturally to the tool results.' },
+        { 
+          role: 'system' as const, 
+          content: '你是一个温暖的心理咨询助手，专门帮助有性瘾困扰的用户。你不评判，只倾听和引导。只用中文回复。保持温暖、安全、不替代专业咨询。' 
+        },
         ...history.slice(-3).map(m => ({ role: m.role, content: m.content })),
         { role: 'user', content: userMessage },
-        { 
-          role: 'assistant', 
+        {
+          role: 'assistant',
           content: null,
           tool_calls: openAiToolCalls
         },
@@ -206,7 +209,7 @@ export class ChatHandler {
       max_tokens: 16000
     });
 
-    return followUpCompletion.choices[0]?.message?.content || 'Tool results processed successfully.';
+    return followUpCompletion.choices[0]?.message?.content || '工具结果已处理。';
   }
 
   /**
@@ -214,13 +217,13 @@ export class ChatHandler {
    */
   private buildConversationMessages(userMessage: string, history: Message[]) {
     return [
-      { 
-        role: 'system' as const, 
-        content: 'You are a helpful AI assistant that helps users build and deploy web applications. You provide clear, concise guidance on development, deployment, and troubleshooting. Keep responses practical and actionable.' 
+      {
+        role: 'system' as const,
+        content: '你是一个温暖的心理咨询助手，专门帮助有性瘾困扰的用户。你不评判，只倾听和引导。只用中文回复。保持温暖、安全、不替代专业咨询。'
       },
-      ...history.slice(-5).map(m => ({ 
-        role: m.role, 
-        content: m.content 
+      ...history.slice(-5).map(m => ({
+        role: m.role,
+        content: m.content
       })),
       { role: 'user' as const, content: userMessage }
     ];
